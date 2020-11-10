@@ -51,7 +51,7 @@ class main(QObject):
 		self.targetNumber = self.window.findChild(QLineEdit, 'targetNumber')		
 		self.targetNomVar = self.window.findChild(QLineEdit, 'targetNomVar')
 		self.targetExitNumber = self.window.findChild(QComboBox, 'targetExitNumber')
-		#self.targetExitNumber = self.window.findChild(QButtonGroup, 'targetExitNumber')
+		#self.targetExitNumber = self.window.findChild(QButtonGroup, 'targetExitNumber_S')
 		self.targetExitParam = self.window.findChild(QComboBox, 'targetExitParam')
 		self.targetExitCode = self.window.findChild(QComboBox, 'targetExitCode')
 		self.targetAccuracy_Link = self.window.findChild(QLineEdit, 'targetAccuracy')
@@ -105,6 +105,8 @@ class main(QObject):
 
 	def pause_button(self):
 		self.statusCode = 'pause'
+		#self.targetExitNumber =
+
 
 	def test_button(self):
 		self.outBox.clear()

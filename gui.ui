@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>mIaAuto v0.5</string>
+   <string>AMSof - Meatest M133 v0.5</string>
   </property>
   <widget class="QPushButton" name="startButton">
    <property name="geometry">
@@ -803,7 +803,7 @@ p, li { white-space: pre-wrap; }
     <bool>true</bool>
    </property>
    <attribute name="buttonGroup">
-    <string notr="true">targetExitNumber_NONE</string>
+    <string notr="true">targetExitNumber_S</string>
    </attribute>
   </widget>
   <widget class="QRadioButton" name="targetExitNumber_4">
@@ -825,7 +825,7 @@ p, li { white-space: pre-wrap; }
     <bool>true</bool>
    </property>
    <attribute name="buttonGroup">
-    <string notr="true">targetExitNumber_NONE</string>
+    <string notr="true">targetExitNumber_S</string>
    </attribute>
   </widget>
   <widget class="QRadioButton" name="targetExitNumber_2">
@@ -844,7 +844,7 @@ p, li { white-space: pre-wrap; }
     <string>2</string>
    </property>
    <attribute name="buttonGroup">
-    <string notr="true">targetExitNumber_NONE</string>
+    <string notr="true">targetExitNumber_S</string>
    </attribute>
   </widget>
   <widget class="QRadioButton" name="targetExitNumber_3">
@@ -863,7 +863,7 @@ p, li { white-space: pre-wrap; }
     <string>3</string>
    </property>
    <attribute name="buttonGroup">
-    <string notr="true">targetExitNumber_NONE</string>
+    <string notr="true">targetExitNumber_S</string>
    </attribute>
   </widget>
   <widget class="QPushButton" name="testButton">
@@ -1042,6 +1042,9 @@ p, li { white-space: pre-wrap; }
    </property>
   </widget>
   <widget class="QComboBox" name="targetExitNumber">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="geometry">
     <rect>
      <x>560</x>
@@ -1078,7 +1081,7 @@ p, li { white-space: pre-wrap; }
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="targetExitNumber_NONE">
+  <buttongroup name="targetExitNumber_S">
    <property name="exclusive">
     <bool>true</bool>
    </property>

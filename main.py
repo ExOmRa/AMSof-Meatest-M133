@@ -1,5 +1,7 @@
-# Установку дефолтних значений и настроек в методы работы
-# Для MTE 143 нет 4 проводной
+# Author - ExOmRa ()
+# License - CC BY-NC-ND 4.0 - https://creativecommons.org/licenses/by-nc-nd/4.0/
+# Email - ExOmRa@gmail.com
+# Repository - https://github.com/ExOmRa/
 
 import openpyxl
 import sys

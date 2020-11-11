@@ -11,7 +11,7 @@ import config
 from concurrent.futures import ThreadPoolExecutor
 
 from PySide2.QtUiTools import QUiLoader
-from PySide2.QtWidgets import QApplication, QPushButton, QLineEdit, QComboBox, QTextBrowser
+from PySide2.QtWidgets import QApplication, QPushButton, QLineEdit, QComboBox, QTextBrowser, QButtonGroup
 from PySide2.QtCore import QFile, QObject
 
 
@@ -50,8 +50,7 @@ class main(QObject):
 		self.targetType_Sub = self.window.findChild(QLineEdit, 'targetType_Sub')
 		self.targetNumber = self.window.findChild(QLineEdit, 'targetNumber')		
 		self.targetNomVar = self.window.findChild(QLineEdit, 'targetNomVar')
-		self.targetExitNumber = self.window.findChild(QComboBox, 'targetExitNumber')
-		#self.targetExitNumber = self.window.findChild(QButtonGroup, 'targetExitNumber_S')
+		self.targetExitNumber = self.window.findChild(QButtonGroup, 'targetExitNumber')
 		self.targetExitParam = self.window.findChild(QComboBox, 'targetExitParam')
 		self.targetExitCode = self.window.findChild(QComboBox, 'targetExitCode')
 		self.targetAccuracy_Link = self.window.findChild(QLineEdit, 'targetAccuracy')
@@ -105,7 +104,7 @@ class main(QObject):
 
 	def pause_button(self):
 		self.statusCode = 'pause'
-		#self.targetExitNumber =
+		#print(self.targetExitNumber.checkedButton().text())
 
 
 	def test_button(self):
@@ -178,7 +177,7 @@ class main(QObject):
 			sheet['L1'] = self.protNumber_1.text() + self.protNumber_2.text().replace("#","/")
 			sheet['N3'] = self.targetType_Sub.text()
 			sheet['R3'] = self.targetNumber.text()
-			sheet['B20'] = self.targetExitNumber.currentText()
+			sheet['B20'] = self.targetExitNumber.checkedButton().text()
 			sheet['E20'] = self.targetExitParam.currentText()
 			sheet['H20'] = self.targetExitCode.currentText()
 			sheet['I5'] = self.targetNomVar.text().replace(".",",")
@@ -212,11 +211,11 @@ class main(QObject):
 		# Вывод протокола
 		elif case == 'end':
 			try:
-				int(self.targetExitNumber.currentText())
+				int(self.targetExitNumber.checkedButton().text())
 			except:
 				wb.save(filename="Protocols/"+self.protNumber_1.text()+self.protNumber_2.text()+".xlsx")
 			else:
-				wb.save(filename="Protocols/"+self.protNumber_1.text()+"-"+self.targetExitNumber.currentText()+self.protNumber_2.text()+".xlsx")
+				wb.save(filename="Protocols/"+self.protNumber_1.text()+"-"+self.targetExitNumber.checkedButton().text()+self.protNumber_2.text()+".xlsx")
 
 			self.outBox.append("Повірку завершено")
 	
@@ -701,7 +700,7 @@ class main(QObject):
 	
 	def MTE_111_U(self):
 		# Вводные
-		U_nom = int(self.targetNomVar.text())
+		U_nom = float(self.targetNomVar.text())
 		F_nom = 50
 		perc_warmup = 0.8
 
@@ -721,7 +720,7 @@ class main(QObject):
 		
 	def MTE_111_F(self):
 		# Вводные
-		U_nom = int(self.targetNomVar.text())
+		U_nom = float(self.targetNomVar.text())
 		F_nom = 50
 		perc_warmup = 1.06
 

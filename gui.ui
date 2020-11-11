@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>AMSof - Meatest M133 v0.5</string>
+   <string>AMSof - Meatest M133 v0.52</string>
   </property>
   <widget class="QPushButton" name="startButton">
    <property name="geometry">
@@ -282,7 +282,7 @@ p, li { white-space: pre-wrap; }
    <property name="geometry">
     <rect>
      <x>240</x>
-     <y>11</y>
+     <y>15</y>
      <width>31</width>
      <height>20</height>
     </rect>
@@ -311,7 +311,7 @@ p, li { white-space: pre-wrap; }
    <property name="geometry">
     <rect>
      <x>280</x>
-     <y>10</y>
+     <y>14</y>
      <width>161</width>
      <height>21</height>
     </rect>
@@ -781,20 +781,20 @@ p, li { white-space: pre-wrap; }
     <set>Qt::AlignCenter</set>
    </property>
   </widget>
-  <widget class="QRadioButton" name="targetExitNumber_1">
+  <widget class="QRadioButton" name="targetExitNumber_0">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="geometry">
     <rect>
-     <x>560</x>
-     <y>80</y>
-     <width>101</width>
+     <x>570</x>
+     <y>82</y>
+     <width>81</width>
      <height>16</height>
     </rect>
    </property>
    <property name="text">
-    <string>Єдиний вихід</string>
+    <string>Без номеру</string>
    </property>
    <property name="checked">
     <bool>true</bool>
@@ -803,17 +803,17 @@ p, li { white-space: pre-wrap; }
     <bool>true</bool>
    </property>
    <attribute name="buttonGroup">
-    <string notr="true">targetExitNumber_S</string>
+    <string notr="true">targetExitNumber</string>
    </attribute>
   </widget>
-  <widget class="QRadioButton" name="targetExitNumber_4">
+  <widget class="QRadioButton" name="targetExitNumber_1">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="geometry">
     <rect>
      <x>560</x>
-     <y>100</y>
+     <y>102</y>
      <width>31</width>
      <height>17</height>
     </rect>
@@ -825,17 +825,17 @@ p, li { white-space: pre-wrap; }
     <bool>true</bool>
    </property>
    <attribute name="buttonGroup">
-    <string notr="true">targetExitNumber_S</string>
+    <string notr="true">targetExitNumber</string>
    </attribute>
   </widget>
   <widget class="QRadioButton" name="targetExitNumber_2">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="geometry">
     <rect>
      <x>600</x>
-     <y>100</y>
+     <y>102</y>
      <width>31</width>
      <height>17</height>
     </rect>
@@ -844,17 +844,17 @@ p, li { white-space: pre-wrap; }
     <string>2</string>
    </property>
    <attribute name="buttonGroup">
-    <string notr="true">targetExitNumber_S</string>
+    <string notr="true">targetExitNumber</string>
    </attribute>
   </widget>
   <widget class="QRadioButton" name="targetExitNumber_3">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="geometry">
     <rect>
      <x>640</x>
-     <y>100</y>
+     <y>102</y>
      <width>31</width>
      <height>17</height>
     </rect>
@@ -863,7 +863,7 @@ p, li { white-space: pre-wrap; }
     <string>3</string>
    </property>
    <attribute name="buttonGroup">
-    <string notr="true">targetExitNumber_S</string>
+    <string notr="true">targetExitNumber</string>
    </attribute>
   </widget>
   <widget class="QPushButton" name="testButton">
@@ -1041,47 +1041,11 @@ p, li { white-space: pre-wrap; }
     <string>Допуск, %</string>
    </property>
   </widget>
-  <widget class="QComboBox" name="targetExitNumber">
-   <property name="enabled">
-    <bool>true</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>560</x>
-     <y>120</y>
-     <width>91</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="currentText">
-    <string>Єдиний вихід</string>
-   </property>
-   <item>
-    <property name="text">
-     <string>Єдиний вихід</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>1</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>2</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>3</string>
-    </property>
-   </item>
-  </widget>
  </widget>
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="targetExitNumber_S">
+  <buttongroup name="targetExitNumber">
    <property name="exclusive">
     <bool>true</bool>
    </property>

@@ -1,7 +1,5 @@
-# Author - ExOmRa
-# License - CC BY-NC-ND 4.0 - https://creativecommons.org/licenses/by-nc-nd/4.0/
-# Email - ExOmRa@gmail.com
-# Repository - https://github.com/ExOmRa/
+# Установку дефолтних значений и настроек в методы работы
+# Для MTE 143 нет 4 проводной
 
 import openpyxl
 import sys
@@ -23,7 +21,7 @@ class main(QObject):
 	# Основные переменные
 	#----------- 			
 	executor = ThreadPoolExecutor(max_workers = 2)
-	statusCode = 'init'
+	statusCode = 'stop'
 
 	#-----------
 	# Подключение GUI
@@ -72,37 +70,37 @@ class main(QObject):
 		self.window.findChild(QPushButton, 'testButton').clicked.connect(self.test_button)
 		
 		# События формы
-		self.window.show()
-		
-		
+		self.window.show()	
 
 	#-----------
 	# Обработка событий формы
 	#-----------
 	def start_button(self):
-		self.outBox.clear()
-		self.outBox.append('Перехід в режим дистанційного управління')
-		config.ser.write(b'SYST:REM \n')
-		
-		# Общие параметры
-		self.targetAccuracy = float(self.targetAccuracy_Link.text().replace(",","."))
-		self.time_warmup = int(self.time_warmup_Link.text())
-		self.time_step = int(self.time_step_Link.text())
-
-		device_start_execute = getattr(self, self.targetType_Main.currentText().replace("/","_")+'_'+self.targetExitParam.currentText())
-		if (self.targetExitCode.currentText() == '0..20'):
-			self.targetExitValue_Nom = 20
-		else:
-			self.targetExitValue_Nom = 5
-
-		# Инициализация
-		if self.statusCode == 'init' or self.statusCode == 'stop':
+		if self.statusCode == 'stop':
 			self.statusCode = 'working'
+
+			self.outBox.clear()
+			self.outBox.append('Перехід в режим дистанційного управління')
+			config.ser.write(b'SYST:REM \n')
+			
+			# Общие параметры
+			self.stepNumber = 0
+			self.targetAccuracy = float(self.targetAccuracy_Link.text().replace(",","."))
+			self.time_warmup = int(self.time_warmup_Link.text())
+			self.time_step = int(self.time_step_Link.text())
+
+			device_start_execute = getattr(self, self.targetType_Main.currentText().replace("/","_")+'_'+self.targetExitParam.currentText())
+			if (self.targetExitCode.currentText() == '0..20'):
+				self.targetExitValue_Nom = 20
+			else:
+				self.targetExitValue_Nom = 5
+
 			self.executor.submit(device_start_execute)
 
 	def stop_button(self):
 		self.stop()
-		self.outBox.append('Сброс сигнала')
+		if self.statusCode == 'working':
+			self.outBox.append('Калібратор зупинено')
 
 	def pause_button(self):
 		self.statusCode = 'pause'
@@ -111,7 +109,6 @@ class main(QObject):
 
 	def test_button(self):
 		self.outBox.clear()
-		self.outBox.append('Перехід в режим дистанційного управління')
 		config.ser.write(b'SYST:REM \n')
 
 		config.ser.write(b'MEAS? \n')
@@ -202,10 +199,10 @@ class main(QObject):
 
 			OUT = self.accuracyCalc(OUT_series)
 
-			# Занос в протокол
+			# Занос в протокол/вывод
 			OUT = str(OUT)
 			OUT = OUT[:6].replace(".",",")
-			self.outBox.append(OUT)
+			self.outBox.append("№" + str(self.stepNumber + 1) + " : " + OUT)
 			sheet[sheet_col+str(sheet_row)] = OUT
 			sheet_row = int(sheet_row)
 			sheet_row += 1
@@ -219,10 +216,10 @@ class main(QObject):
 			else:
 				wb.save(filename="Protocols/"+self.protNumber_1.text()+"-"+self.targetExitNumber.checkedButton().text()+self.protNumber_2.text()+".xlsx")
 
-			self.outBox.append("Повірку завершено")
+			self.outBox.append("- Повірку завершено")
 	
 	def warmup(self, mode_warmup, perc_warmup, nom_var):
-		self.outBox.append("Прогрев")
+		self.outBox.append("- Виконується прогрів приладу")
 		# Подготовка данных
 		mode_warmup = str(mode_warmup).encode('ascii')
 		var_warmup = str(nom_var*perc_warmup).encode('ascii')
@@ -231,7 +228,7 @@ class main(QObject):
 		config.ser.write(mode_warmup+b" "+var_warmup+b" \n")
 		config.ser.write(b"OUTP ON \n")
 		self.flagSleep(self.time_warmup)
-		self.outBox.append("Повірка:")
+		self.outBox.append("- Початок повірки [точка : макс. похибка]:")
 
 	#-----------
 	# Метод работы
@@ -242,17 +239,16 @@ class main(QObject):
 		self.warmup("CAC:CURR", perc_warmup, I_nom)
 	
 		# Поверка
-		i = 0
-		while( i < len(I_steps)):
-			self.targetTrueValue_Cur = I_steps[i]
+		while(self.stepNumber < len(I_steps)):
+			self.targetTrueValue_Cur = I_steps[self.stepNumber]
 
-			config.ser.write(b'CAC:CURR '+(str(I_steps[i]).encode('ascii'))+b' \n')
+			config.ser.write(b'CAC:CURR '+(str(I_steps[self.stepNumber]).encode('ascii'))+b' \n')
 			
 			self.flagSleep(self.time_step)
 			self.prot('data',0,0)
 			self.flagSleep(2)
 			
-			i += 1
+			self.stepNumber += 1
 			
 		self.prot('end',0,0)
 		self.stop()
@@ -272,26 +268,25 @@ class main(QObject):
 			self.warmup("VAC:FREQ", perc_warmup, F_nom)
 			
 		# Поверка
-		i = 0
-		while( i < len(U_steps)):
+		while(self.stepNumber < len(U_steps)):
 			# Считаем действительное значение
 			if (self.targetExitParam.currentText() == 'U'):
-				self.targetTrueValue_Cur = U_steps[i]
+				self.targetTrueValue_Cur = U_steps[self.stepNumber]
 			elif (self.targetExitParam.currentText() == 'F'):
-				self.targetTrueValue_Cur = F_steps[i]
+				self.targetTrueValue_Cur = F_steps[self.stepNumber]
 
-			config.ser.write(b'VAC:VOLT '+(str(U_steps[i]).encode('ascii'))+b' \n')
-			config.ser.write(b'VAC:FREQ '+(str(F_steps[i]).encode('ascii'))+b' \n')
+			config.ser.write(b'VAC:VOLT '+(str(U_steps[self.stepNumber]).encode('ascii'))+b' \n')
+			config.ser.write(b'VAC:FREQ '+(str(F_steps[self.stepNumber]).encode('ascii'))+b' \n')
 			
 			# Перезапуск подачи при переходе от значений меньших за 100 V к большим
-			if ((U_steps[i] >= 100) and (U_steps[i-1] < U_steps[i])):
+			if ((U_steps[self.stepNumber] >= 100) and (U_steps[self.stepNumber-1] < U_steps[i])):
 				config.ser.write(b"OUTP ON \n")
 			
 			self.flagSleep(self.time_step)
 			self.prot('data',0,0)
 			self.flagSleep(2)
 			
-			i += 1
+			self.stepNumber += 1
 			
 		self.prot('end',0,0)
 		self.stop()
@@ -302,23 +297,22 @@ class main(QObject):
 		self.warmup("PAC:CURR", perc_warmup, I_nom)
 
 		# Поверка
-		i = 0
-		while( i < len(I_steps)):
+		while( self.stepNumber < len(I_steps)):
 			# Считаем действительное значение
 			if (self.targetExitParam.currentText() == 'P'):
-				self.targetTrueValue_Cur = U_steps[i] * math.sqrt(3) * I_steps[i] * math.cos(D_steps[i])
+				self.targetTrueValue_Cur = U_steps[self.stepNumber] * math.sqrt(3) * I_steps[self.stepNumber] * math.cos(D_steps[self.stepNumber])
 			elif (self.targetExitParam.currentText() == 'Q'):
-				self.targetTrueValue_Cur = U_steps[i] * math.sqrt(3) * I_steps[i] * math.sin(D_steps[i])
+				self.targetTrueValue_Cur = U_steps[self.stepNumber] * math.sqrt(3) * I_steps[self.stepNumber] * math.sin(D_steps[self.stepNumber])
 			
-			config.ser.write(b'PAC:CURR '+(str(I_steps[i]).encode('ascii'))+b' \n')
-			config.ser.write(b'PAC:VOLT '+(str(U_steps[i]).encode('ascii'))+b' \n')
-			config.ser.write(b'PAC:PHAS '+(str(D_steps[i]).encode('ascii'))+b' \n')
+			config.ser.write(b'PAC:CURR '+(str(I_steps[self.stepNumber]).encode('ascii'))+b' \n')
+			config.ser.write(b'PAC:VOLT '+(str(U_steps[self.stepNumber]).encode('ascii'))+b' \n')
+			config.ser.write(b'PAC:PHAS '+(str(D_steps[self.stepNumber]).encode('ascii'))+b' \n')
 						
 			self.flagSleep(self.time_step)
 			self.prot('data',0,0)
 			self.flagSleep(2)
 			
-			i += 1
+			self.stepNumber += 1
 			
 		self.prot('end',0,0)
 		self.stop()
@@ -357,6 +351,8 @@ class main(QObject):
 		# Вводные
 		I_nom = float(self.targetNomVar.text())
 		perc_warmup = 0.8
+
+		self.targetTrueValue_Nom = I_nom
 
 		# Установка дефолтних значений и настроек
 		config.ser.write(b"CONF CURR \n")
@@ -737,7 +733,7 @@ class main(QObject):
 
 	def E858_1_F(self):
 		# Вводные
-		U_nom = int(self.targetNomVar.text())
+		U_nom = float(self.targetNomVar.text())
 		F_nom = 50
 		perc_warmup = 1
 		
@@ -750,7 +746,7 @@ class main(QObject):
 		
 	def E858_2_F(self):
 		# Вводные
-		U_nom = int(self.targetNomVar.text())
+		U_nom = float(self.targetNomVar.text())
 		F_nom = 50
 		perc_warmup = 1
 		
@@ -763,7 +759,7 @@ class main(QObject):
 		
 	def E855_1_U(self):
 		# Вводные
-		U_nom = int(self.targetNomVar.text())
+		U_nom = float(self.targetNomVar.text())
 		F_nom = 50
 		perc_warmup = 0.8
 	
@@ -781,7 +777,7 @@ class main(QObject):
 
 	def E855_2_U(self):
 		# Вводные
-		U_nom = int(self.targetNomVar.text())
+		U_nom = float(self.targetNomVar.text())
 		F_nom = 50
 		perc_warmup = 0.92
 	

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>mainWindow</class>
  <widget class="QWidget" name="mainWindow">
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>AMSof - Meatest M133 v0.52</string>
+   <string>AMSof - Meatest M133 v0.53</string>
   </property>
   <widget class="QPushButton" name="startButton">
    <property name="geometry">
@@ -934,37 +934,6 @@ p, li { white-space: pre-wrap; }
     <string>Час збору данних, с</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pauseButton">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>410</x>
-     <y>320</y>
-     <width>81</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <weight>75</weight>
-     <bold>true</bold>
-    </font>
-   </property>
-   <property name="cursor">
-    <cursorShape>PointingHandCursor</cursorShape>
-   </property>
-   <property name="text">
-    <string>Пауза</string>
-   </property>
-   <property name="default">
-    <bool>false</bool>
-   </property>
-   <property name="flat">
-    <bool>false</bool>
-   </property>
-  </widget>
   <widget class="Line" name="line_7">
    <property name="geometry">
     <rect>
@@ -1039,6 +1008,29 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>Допуск, %</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="diagnosLabel">
+   <property name="geometry">
+    <rect>
+     <x>410</x>
+     <y>330</y>
+     <width>81</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>11</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>. . .</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
    </property>
   </widget>
  </widget>

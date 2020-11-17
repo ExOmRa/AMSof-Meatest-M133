@@ -11,7 +11,7 @@ import config
 from concurrent.futures import ThreadPoolExecutor
 
 from PySide2.QtUiTools import QUiLoader
-from PySide2.QtWidgets import QApplication, QPushButton, QLineEdit, QComboBox, QTextBrowser, QButtonGroup
+from PySide2.QtWidgets import QApplication, QPushButton, QLineEdit, QComboBox, QTextBrowser, QButtonGroup, QLabel
 from PySide2.QtCore import QFile, QObject
 
 
@@ -66,8 +66,10 @@ class main(QObject):
 		# Управление
 		self.window.findChild(QPushButton, 'startButton').clicked.connect(self.start_button)
 		self.window.findChild(QPushButton, 'stopButton').clicked.connect(self.stop_button)
-		self.window.findChild(QPushButton, 'pauseButton').clicked.connect(self.pause_button)
 		self.window.findChild(QPushButton, 'testButton').clicked.connect(self.test_button)
+
+		# Обратная связь
+		self.diagnosLabel = self.window.findChild(QLabel, 'diagnosLabel')
 		
 		# События формы
 		self.window.show()	
@@ -80,10 +82,12 @@ class main(QObject):
 			self.statusCode = 'working'
 
 			self.outBox.clear()
-			self.outBox.append('Перехід в режим дистанційного управління')
+			#self.outBox.append('Перехід в режим дистанційного управління')
 			config.ser.write(b'SYST:REM \n')
 			
 			# Общие параметры
+			self.diagnos = "Придатний"
+			self.diagnosLabel.setText('. . .')
 			self.stepNumber = 0
 			self.targetAccuracy = float(self.targetAccuracy_Link.text().replace(",","."))
 			self.time_warmup = int(self.time_warmup_Link.text())
@@ -99,13 +103,8 @@ class main(QObject):
 
 	def stop_button(self):
 		self.stop()
-		if self.statusCode == 'working':
-			self.outBox.append('Калібратор зупинено')
-
-	def pause_button(self):
-		self.statusCode = 'pause'
-		#print(self.targetExitNumber.checkedButton().text())
-
+		#if self.statusCode == 'working':
+			#self.outBox.append('Калібратор зупинено')
 
 	def test_button(self):
 		self.outBox.clear()
@@ -146,13 +145,18 @@ class main(QObject):
 			# Подсчет погрешности
 			if (self.targetExitParam.currentText() == 'F'):
 				calc_Max = ((OUT_max * 10 / self.targetExitValue_Nom + 45) - self.targetTrueValue_Cur) / self.targetTrueValue_Nom * 100
-				calc_Min = ((OUT_min * 10 / self.targetExitValue_Nom + 45) - self.targetTrueValue_Cur) / self.targetTrueValue_Nom * 100					
+				calc_Min = ((OUT_min * 10 / self.targetExitValue_Nom + 45) - self.targetTrueValue_Cur) / self.targetTrueValue_Nom * 100
 			else:
 				calc_Max = ((OUT_max * self.targetTrueValue_Nom / self.targetExitValue_Nom) - self.targetTrueValue_Cur) / self.targetTrueValue_Nom * 100
 				calc_Min = ((OUT_min * self.targetTrueValue_Nom / self.targetExitValue_Nom) - self.targetTrueValue_Cur) / self.targetTrueValue_Nom * 100
 
-			#if ((abs(calc_Max) > self.targetAccuracy) or (abs(calc_Min) > self.targetAccuracy)):
-				#self.outBox.append('БРАК')
+			if ((abs(calc_Max) > self.targetAccuracy) or (abs(calc_Min) > self.targetAccuracy)):
+				self.diagnos = 'Брак'
+				self.diagnosLabel.setText(self.diagnos)
+				self.outBox.append('БРАК')
+
+				#self.outBox.append(str(self.targetTrueValue_Nom))
+				#self.outBox.append(str(self.targetTrueValue_Cur))
 
 			if ((abs(calc_Max)) >= (abs(calc_Min))):
 				return OUT_max
@@ -209,6 +213,9 @@ class main(QObject):
 		
 		# Вывод протокола
 		elif case == 'end':
+			sheet['D63'] = self.diagnos
+			self.diagnosLabel.setText(self.diagnos)
+			
 			try:
 				int(self.targetExitNumber.checkedButton().text())
 			except:
@@ -253,7 +260,7 @@ class main(QObject):
 		self.prot('end',0,0)
 		self.stop()
 
-	def AC_voltage(self, case, perc_warmup, U_nom, U_steps, F_nom, F_steps):
+	def AC_voltage(self, perc_warmup, U_nom, U_steps, F_nom, F_steps):
 		
 		# Установка дефолтних значений и настроек
 		config.ser.write(b"CONF CURR \n")
@@ -279,7 +286,7 @@ class main(QObject):
 			config.ser.write(b'VAC:FREQ '+(str(F_steps[self.stepNumber]).encode('ascii'))+b' \n')
 			
 			# Перезапуск подачи при переходе от значений меньших за 100 V к большим
-			if ((U_steps[self.stepNumber] >= 100) and (U_steps[self.stepNumber-1] < U_steps[i])):
+			if ((U_steps[self.stepNumber] >= 100) and (U_steps[self.stepNumber-1] < U_steps[self.stepNumber])):
 				config.ser.write(b"OUTP ON \n")
 			
 			self.flagSleep(self.time_step)
@@ -300,10 +307,12 @@ class main(QObject):
 		while( self.stepNumber < len(I_steps)):
 			# Считаем действительное значение
 			if (self.targetExitParam.currentText() == 'P'):
-				self.targetTrueValue_Cur = U_steps[self.stepNumber] * math.sqrt(3) * I_steps[self.stepNumber] * math.cos(D_steps[self.stepNumber])
+				self.targetTrueValue_Cur = U_steps[self.stepNumber] * 3 * I_steps[self.stepNumber] * math.cos(math.radians(D_steps[self.stepNumber]))
 			elif (self.targetExitParam.currentText() == 'Q'):
-				self.targetTrueValue_Cur = U_steps[self.stepNumber] * math.sqrt(3) * I_steps[self.stepNumber] * math.sin(D_steps[self.stepNumber])
-			
+				self.targetTrueValue_Cur = U_steps[self.stepNumber] * 3 * I_steps[self.stepNumber] * math.sin(math.radians(D_steps[self.stepNumber]))
+			elif (self.targetExitParam.currentText() == 'I'):
+				self.targetTrueValue_Cur = I_steps[self.stepNumber]
+
 			config.ser.write(b'PAC:CURR '+(str(I_steps[self.stepNumber]).encode('ascii'))+b' \n')
 			config.ser.write(b'PAC:VOLT '+(str(U_steps[self.stepNumber]).encode('ascii'))+b' \n')
 			config.ser.write(b'PAC:PHAS '+(str(D_steps[self.stepNumber]).encode('ascii'))+b' \n')
@@ -376,7 +385,7 @@ class main(QObject):
 		U_nom = 57.735
 		perc_warmup = 0.8
 
-		self.targetTrueValue_Nom = U_nom * math.sqrt(3) * I_nom * math.cos(0)
+		self.targetTrueValue_Nom = U_nom * 3 * I_nom * math.cos(math.radians(0))
 		
 		# Установка дефолтних значений и настроек
 		config.ser.write(b"CONF CURR \n")
@@ -400,7 +409,7 @@ class main(QObject):
 		I_steps.append (I_nom * 1)
 		I_steps.append (I_nom * 1)
 		I_steps.append (I_nom * 1)
-		I_steps.append (I_nom * 1)		
+		I_steps.append (I_nom * 1)				
 
 		U_steps = [];
 		U_steps.append (U_nom * 0.2)
@@ -430,7 +439,7 @@ class main(QObject):
 		D_steps.append (240)
 		D_steps.append (330)
 		D_steps.append (60)
-		D_steps.append (150)		
+		D_steps.append (150)			
 		
 		self.prot('init','P','23')
 		self.Power(perc_warmup, I_nom, I_steps, U_steps, D_steps)			
@@ -440,6 +449,8 @@ class main(QObject):
 		I_nom = float(self.targetNomVar.text())
 		U_nom = 57.735
 		perc_warmup = 0.8
+
+		self.targetTrueValue_Nom = U_nom * 3 * I_nom * math.sin(math.radians(90))
 
 		# Установка дефолтних значений и настроек
 		config.ser.write(b"CONF CURR \n")
@@ -504,6 +515,8 @@ class main(QObject):
 		U_nom = 57.735
 		perc_warmup = 0.8
 
+		self.targetTrueValue_Nom = I_nom
+
 		# Установка дефолтних значений и настроек
 		config.ser.write(b"CONF CURR \n")
 		config.ser.write(b"PAC:UNIT W \n")
@@ -539,6 +552,8 @@ class main(QObject):
 		I_nom = float(self.targetNomVar.text())
 		U_nom = 57.735
 		perc_warmup = 0.8
+
+		self.targetTrueValue_Nom = U_nom * 3 * I_nom * math.cos(math.radians(0))
 
 		# Установка дефолтних значений и настроек
 		config.ser.write(b"CONF CURR \n")
@@ -603,6 +618,8 @@ class main(QObject):
 		U_nom = 57.735
 		perc_warmup = 0.8
 
+		self.targetTrueValue_Nom = U_nom * 3 * I_nom * math.sin(math.radians(90))
+
 		# Установка дефолтних значений и настроек
 		config.ser.write(b"CONF CURR \n")
 		config.ser.write(b"PAC:UNIT VAR \n")
@@ -666,6 +683,8 @@ class main(QObject):
 		U_nom = 57.735
 		perc_warmup = 0.8
 
+		self.targetTrueValue_Nom = I_nom
+
 		# Установка дефолтних значений и настроек
 		config.ser.write(b"CONF CURR \n")
 		config.ser.write(b"PAC:UNIT W \n")
@@ -714,7 +733,7 @@ class main(QObject):
 		F_steps = [F_nom, F_nom, F_nom, F_nom, F_nom];
 
 		self.prot('init','H','23')		
-		self.AC_voltage('volt', perc_warmup, U_nom, U_steps, F_nom, F_steps)	
+		self.AC_voltage(perc_warmup, U_nom, U_steps, F_nom, F_steps)	
 		
 	def MTE_111_F(self):
 		# Вводные
@@ -729,39 +748,45 @@ class main(QObject):
 		F_steps = [45, 47.5, 50, 52.5, 55];
 
 		self.prot('init','E','22')		
-		self.AC_voltage('freq', perc_warmup, U_nom, U_steps, F_nom, F_steps)	
+		self.AC_voltage(perc_warmup, U_nom, U_steps, F_nom, F_steps)	
 
 	def E858_1_F(self):
 		# Вводные
 		U_nom = float(self.targetNomVar.text())
 		F_nom = 50
 		perc_warmup = 1
+
+		self.targetTrueValue_Nom = F_nom
 		
 		# Шаги
 		U_steps = [U_nom, U_nom, U_nom, U_nom, U_nom, U_nom, U_nom];
 		F_steps = [45, 45.01, 47.5, 50, 52.5, 54.99, 55];
 
 		self.prot('init','F','22')		
-		self.AC_voltage('freq', perc_warmup, U_nom, U_steps, F_nom, F_steps)		
+		self.AC_voltage(perc_warmup, U_nom, U_steps, F_nom, F_steps)		
 		
 	def E858_2_F(self):
 		# Вводные
 		U_nom = float(self.targetNomVar.text())
 		F_nom = 50
 		perc_warmup = 1
+
+		self.targetTrueValue_Nom = F_nom
 		
 		# Шаги
 		U_steps = [U_nom, U_nom, U_nom, U_nom, U_nom];
 		F_steps = [48, 49, 50, 51, 52];
 
 		self.prot('init','F','22')		
-		self.AC_voltage('freq', perc_warmup, U_nom, U_steps, F_nom, F_steps)			
+		self.AC_voltage(perc_warmup, U_nom, U_steps, F_nom, F_steps)			
 		
 	def E855_1_U(self):
 		# Вводные
 		U_nom = float(self.targetNomVar.text())
 		F_nom = 50
 		perc_warmup = 0.8
+
+		self.targetTrueValue_Nom = U_nom
 	
 		#Шаги
 		U_steps = [];
@@ -773,26 +798,30 @@ class main(QObject):
 		F_steps = [F_nom, F_nom, F_nom, F_nom, F_nom];
 
 		self.prot('init','H','23')		
-		self.AC_voltage('volt', perc_warmup, U_nom, U_steps, F_nom, F_steps)
+		self.AC_voltage(perc_warmup, U_nom, U_steps, F_nom, F_steps)
 
 	def E855_2_U(self):
 		# Вводные
 		U_nom = float(self.targetNomVar.text())
 		F_nom = 50
 		perc_warmup = 0.92
+
+		self.targetTrueValue_Nom = U_nom
 	
 		#Шаги
 		U_steps = [75, 85, 95, 105, 115, 125];
 		F_steps = [F_nom, F_nom, F_nom, F_nom, F_nom, F_nom];
 
 		self.prot('init','H','23')		
-		self.AC_voltage('volt', perc_warmup, U_nom, U_steps, F_nom, F_steps)			
+		self.AC_voltage(perc_warmup, U_nom, U_steps, F_nom, F_steps)			
 	
 	def E848_P(self):
 		# Вводные
 		I_nom = float(self.targetNomVar.text())
 		U_nom = 57.735
 		perc_warmup = 0.8
+
+		self.targetTrueValue_Nom = U_nom * 3 * I_nom * math.cos(math.radians(0))
 
 		# Установка дефолтних значений и настроек
 		config.ser.write(b"CONF CURR \n")

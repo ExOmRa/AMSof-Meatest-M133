@@ -91,6 +91,7 @@ class main(QObject):
 			except:
 				self.statusCode = 'stop'
 				self.outBoxOne.append('- Відсутній набір повірочних значень для даного коду виходу')
+				self.stop()
 			else:
 				# Общие параметры
 				self.diagnos = "Придатний"
@@ -127,7 +128,7 @@ class main(QObject):
 			self.ser.write(b"SYST:LOC \n")
 		except:
 			self.outBoxOne.append("- Помилка з'єднання - Порт відсутній")
-			#self.stop()
+			self.stop()
 			#self.ser.write(b"SYST:LOC \n")
 			#self.ser.close()
 		else:
